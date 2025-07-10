@@ -1,0 +1,80 @@
+---
+title: "Practicando_S3"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+CLASE_DE_FUNCIONES:
+
+```{r}
+glucosa = c(84, 91, 37, 42)
+```
+
+```{r}
+mean(glucosa)
+```
+
+```{r}
+sd(glucosa)
+```
+
+```{r}
+median(glucosa)
+```
+
+```{r}
+rnorm(n = 11, mean = 25, sd = 32)
+```
+
+```{r}
+set.seed(100)
+rnorm(n = 11, mean = 25, sd = 32)
+```
+
+```{r}
+set.seed(100)
+rnorm(11, 25, 32)
+```
+
+```{r}
+install.packages("ggplot2")
+```
+
+```{r}
+install.packages("dplyr")
+```
+
+```{r}
+install.packages("tibble")
+```
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+library("dplyr")
+```
+
+```{r}
+library(tibble)
+```

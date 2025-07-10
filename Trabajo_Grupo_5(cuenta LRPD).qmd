@@ -1,0 +1,762 @@
+---
+title: "Visualización de datos"
+author: "GRUPO 5"
+format: html
+editor: visual
+Integrantes del grupo:
+- Mantilla Saravia Daniel José
+- Pachas Ventura Luis Marco
+- Mendoza Felipa Astryd Xihomara
+- Marcos Avalos Ruth Lizeth Edith
+- Pachas Munayco Walter Manuel
+- Acero Valencia Rodrigo
+---
+
+# Paquetes para visualizar datos
+
+```{r}
+#install.packages("gridExtra")
+```
+
+```{r}
+library(tidyverse)
+library(rio)
+library(here)
+library(gridExtra) ## Para múltiple gráficos en una sola página
+library(GGally) ## Para gráficos de correlación
+library(forcats)
+```
+
+# Cargando los datos
+
+El *dataset* contiene datos de 218 pacientes con cáncer cervical. El *dataset* incluye 18 variables entre étnicas, ocupacionales y variables ocupacionales.
+
+```{r}
+data_cerv_0 <- import(here("data", "conoc_actit_factor_cancer_cervical.csv"))
+```
+
+## Examinamos los datos
+
+`str()` es la función para ver la estructura de los datos.
+
+```{r}
+str(data_cerv_0)
+```
+
+```{r}
+install.packages("skimr")
+```
+
+```{r}
+library("skimr")
+```
+
+```{r}
+skim(data_cerv)
+```
+
+## Conversión de caracteres a factor (categóricos) usando la función `mutate_if()`
+
+Las variables categóricas (ej. Estadio T) han sido importadas como caracteres. Necesitamos transformalo a factores. En RStudio, factores es el tipo de dato para trabajar con variables categóricas.
+
+```{r}
+data_cerv <- data_cerv_0 |> 
+  mutate_if(is.character, as.factor)
+str(data_cerv)
+```
+
+# Visualizando datos: el molde
+
+Para realizar visualizaciones con el paquete ggplot2, debemos reemplazar lo que esta encerrado en los signos. Este es el molde fundamental para crear gráficos más complejos.
+
+`<midata> |> ggplot(aes(x = <var1>, y = <var2>)) + geom_<xxxx>()`
+
+-   <midata> : el nombre del dataset a utilizar.
+-   \|\> : esto es llamado "pipe", la cual conecta los datos a la función ggplot
+-   \+ : usa + par conectar declaraciones de ggplot
+-   <var> : la variable, cuyos datos serán usados para crear el gráfico.
+-   geom\_<xxxx>: indica la función para crear el tipo de gráfico. Ej. geom_bar, para crear gráficos de barra.
+
+# Visualizando distribución de datos
+
+# 1. Visualizando datos categóricos
+
+Gráficos de barra Los gráficos de barra son adecuados para mostrar frecuencias de variables categóricas.
+
+```{r}
+data_cerv |>  
+  ggplot(aes(x = etnia)) +
+  geom_bar()
+```
+
+Aquí, añadimos la función `fct_infreq()` de paquete forcats para ordenar (en orden decreciente) las barras del conteo, por estado marital.
+
+```{r}
+data_cerv |>  
+  ggplot(aes(x = fct_infreq(etnia))) +
+  geom_bar()
+```
+
+Con la función `labs()` podemos añadir nombres a los ejes del gráficos.
+
+```{r}
+data_cerv |>  
+  ggplot(aes(x = fct_infreq(etnia))) +
+  geom_bar() +
+  labs(y = "Frecuencia", x = "etnia")
+```
+
+Para el gráfico de barra podemos usar frecuencias relativas. Por ejemplo, un gráfico de barras que muestre proporciones. Aquí es necesario calcular las proporciones. Nota que seguida a `y =` se muestra el cálculo para convertir los conteos a proporciones.
+
+```{r}
+data_cerv |>  
+  ggplot(aes(x = etnia, y = ..count../sum(after_stat(count)))) +
+  geom_bar() +
+  labs(y = "Porcentaje", x = "etnia")
+```
+
+# 2. Visualizando Datos Numéricos
+
+## 2.1. Con histogramas
+
+Para visualizar conteos. Nota que aquí, la variable `edad` es numérica y la función para producir un histograma es `geom_histogram()`
+
+```{r}
+data_cerv |>  
+  ggplot(aes(x = edad)) +
+  geom_histogram() +
+  labs(y = "Frecuencia", x = "edad")
+```
+
+Un histograma de proporciones. Aquí `..density..` es la estimación de densidad que reemplaza al conteo crudo. Toda el area del gráfico de densidad suma 1.
+
+```{r}
+data_cerv  |>  
+  ggplot(aes(x = num_hijos)) +
+  geom_histogram(aes(y = ..density..)) +
+  labs(y = "Density", x = "num_hijos")
+```
+
+A veces, puede ser util visualizar gráficos de lado a lado. Aquí dos histogramas lado a lado usando la función `grid.arrange()`
+
+```{r}
+hist_1 = data_cerv |> ggplot(aes(x = num_hijos)) +
+  geom_histogram() +
+  labs(y = "Frecuencia", x = "num_hijos")
+
+hist_2 = data_cerv  |>  
+  ggplot(aes(x = num_hijos)) +
+  geom_histogram(aes(y = ..density..)) +
+  labs(y = "Density", x = "num_hijos")
+```
+
+```{r}
+grid.arrange(hist_1, hist_2, ncol = 2)
+```
+
+Conteo con un número de barras distinto
+
+Podemos cambiar los intervalos para la generación del histograma usando el argumento bins dentro de la función `geom_histogram()`
+
+```{r}
+data_cerv |>  
+  ggplot(aes(x = num_hijos)) +
+  geom_histogram(bins = 30) +
+  labs(y = "Frecuencia", x = "num_hijos")
+```
+
+Modificando los colores de las barras del histograma.
+
+```{r}
+data_cerv |>  
+  ggplot(aes(x = num_hijos)) +
+  geom_histogram(
+    color = "black", ## Color de las barras
+    fill = "green" ## Color de las barras
+    ) + 
+  labs(y = "Frecuencia", 
+       x = "num_hijos")
+```
+
+Modificando color en gráficos de barras. Nota que aquí, usamos el argumento fill para colorear las barras pertenecientes a las categorías.
+
+```{r}
+data_cerv |>  
+  ggplot(aes(x = fct_infreq(etnia), fill = etnia)) +
+  geom_bar() +
+  labs(y = "Frecuencia", x = "etnia")
+```
+
+## 2.2. Con Boxplots (gráfico de cajas y bigotes)
+
+Para mostrar datos de una variable en un gráfico de cajas y bigotes usamos la función `geom_boxplot()`
+
+```{r}
+data_mama |> 
+  ggplot(aes(y = Albumina_g_dL)) + ## Cambia y por x para invertir el gráfico
+  geom_boxplot() +
+  theme(axis.text.x  = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(y = "Albumina")
+```
+
+La función nativa de R, `boxplot()`, permite realizar el mismo gráfico.
+
+```{r}
+box_album_base = boxplot(data_mama$Albumina_g_dL,
+                         ylab = "Albumina",
+                         horizontal = TRUE, ## Cambia la dirección del gráfico
+                         col = "salmon") ## Añadimos color
+  
+```
+
+# 3. Visualizando variables categóricas *versus* categóricas
+
+```{r}
+data_cerv |> 
+  ggplot(aes(x = etnia, fill = ocupacion)) +
+  geom_bar(position = "dodge") + ## Sin este argumento, las barras estarán una sobre otras
+  labs(y = "Frecuencia",  
+       x = "etnia",
+       fill = "ocupacion")
+```
+
+**PC2-2**
+
+```{r}
+library(tidyverse)
+library(rio)
+library(here)
+library(gridExtra) ## Para múltiple gráficos en una sola página
+library(GGally) ## Para gráficos de correlación
+library(forcats)
+library(gtsummary)
+library(dplyr)
+library(ggplot2)
+library(flextable)
+```
+
+# Cargamos los paquetes necesarios
+
+```{r}
+library(rio) library(here)  
+```
+
+# Cargar los datos
+
+```{r}
+data_cerv_0 <- import(here("data", "conoc_actit_factor_cancer_cervical.csv"))
+```
+
+# 1. Para datos continuos
+
+La prueba t de Student y el ANOVA son dos pruebas estadísticas ampliamente utilizadas que permiten evaluar si el valor promedio de una variable numérica difiere entre dos o más grupos o categorías.
+
+Ambas pruebas asumen que la variable continua sigue una distribución normal.\
+Pero, ¿cómo podemos comprobar si esta condición se cumple?\
+Mediante una prueba de bondad de ajuste.
+
+Una de las pruebas más comunes para evaluar la normalidad de una variable numérica es la prueba de Shapiro-Wilk. Esta prueba permite determinar si los datos provienen de una distribución normal, lo cual es un requisito clave antes de aplicar pruebas como la t de Student o el ANOVA.
+
+## Para la variable circun_cintura
+
+Esta variable corresponde a medidas de circunferecia de cintura en centimetros. En R, usamos la función nativa `shapiro.test()` para realizar la prueba de Shapiro-Wilk
+
+```{r}
+shapiro.test(data_glucosa_circun$circun_cintura)
+```
+
+# 2. Para datos categóricos
+
+El dataset para esta sesión contiene información sobre el estado de síndrome metabólico. En esta muestra, el número de participantes con síndrome metabólico es 65 de un total de 200.
+
+```{r}
+table(data_glucosa_circun$sindrom_metabolico)
+```
+
+Un estudio previo realizado en Perú reportó una prevalencia de síndrome metabólico del 26,9% (DOI: <https://doi.org/10.1111/j.1365-2362.2009.02191.x>).
+
+En este caso, la prevalencia del estudio previo representa el valor esperado, mientras que la prevalencia observada en nuestro conjunto de datos representa el valor observado.
+
+Uno de los objetivos de nuestro análisis es evaluar si la proporción observada de síndrome metabólico difiere significativamente de la proporción esperada. Para ello, utilizamos la prueba de bondad de ajuste de Chi-cuadrado.
+
+Las hipótesis de esta prueba son las siguientes:
+
+-   **Hipótesis nula (H₀):** No existe una diferencia significativa entre la proporción observada y la esperada.
+
+-   **Hipótesis alternativa (H₁):** Existe una diferencia significativa entre la proporción observada y la esperada.
+
+En R, esta prueba se realiza mediante la función `chisq.test()`, a la cual se deben proporcionar los valores observados y las proporciones esperadas para llevar a cabo la comparación.
+
+```{r}
+chisq.test(x = c(65, 135), p = c(0.269, 0.731))
+```
+
+Interpretación
+
+Dado que el valor de p es mayor a 0.05, podemos concluir que las proporciones observadas no son significativamente diferentes de las proporciones esperadas.
+
+# **9. Regresion Lineal Simple Prueba**
+
+# Cargando los datos
+
+```{r}
+circun_glucosa <- import(here("data", "s09_circunf_glucosa.csv"))
+```
+
+# Sobre los datos para esta práctica
+
+El dataset circun_glucosa, de 1000 personas adultas (\>=20 años de edad), contiene datos glucosa medida en ayunas (en mg/dL), cirunferencia de cintura (en centimetros), tabaquismo y otros datos demográficos.
+
+# 1 Regresión lineal simple
+
+Regresión es una método para evaluar la asociación entre una variable dependiente (tambien llamado desenlace Y) y una o varias variables independientes (predictoras X1, X2,..., Xk). Los modelos de regresión lineal simple (o univariable) utilizan solo solo una variable independiente o predictora X. Ejemplos de preguntas de investigación se puede responder usando un modelo de regresión lineal:
+
+-   ¿Existe una asociación entre el promedio final del curso de Metodos y Sistematización de Métodos Estadísticos (desenlace o variable dependiente) y las horas de sueño (preditor o variable independiente)?
+
+-   ¿Existe una asoación entre el el nivel de glucosa y la circunferencia de cintura?
+
+La ultima pregunta es la que evaluaremos en esta práctica.
+
+PC3-1----------------------------------------------------------------------------------------------------------------------------------------------------\
+Cargamos e instalamos paquetes
+
+```{r}
+install.packages("car") 
+install.packages("cards") 
+install.packages("broom.helpers")
+```
+
+```{r}
+library(tidyverse) 
+library(here) 
+library(rio) 
+library(gtsummary) 
+library(car) 
+library(cards) 
+library(broom.helpers)
+```
+
+## Cargando los datos
+
+```{r}
+hipert_covid <- import(here("data", "s10_hipert_covid.csv"))
+```
+
+```{r}
+asma <- import(here("data", "s10_asma.csv"))
+```
+
+## 1.2 Estimando OR usando regresión logística para un predictor categórico
+
+```{r}
+hipert_covid_1 <- hipert_covid |>    mutate(hipert = relevel(as.factor(hipert), ref = "no"),          desenlace = relevel(as.factor(desenlace), ref = "vivo"))
+```
+
+A continuación, usamos la función `glm()`, general linear model, con el argumento family = binomial para ajustar una regresión logística y `summary()` para ver los resultados.
+
+```{r}
+regre_log <- glm(desenlace ~ hipert,
+                 family = binomial, 
+                 data = hipert_covid_1)
+
+summary(regre_log)
+```
+
+Para obtener el OR en sí (como usualmente se reporta en los estudios), exponenciamos el coeficiente usando la función exp()
+
+```{r}
+exp(coef(regre_log)[-1]) # [-1] elimina la primera fila, al intercepto.
+```
+
+Usamos la función `confint()` para calcular los intervalos de confianza (IC) al 95% para el coeficientes de regresión, y exponenciamos estos valores para obtener los IC del 95% para los OR.
+
+```{r}
+exp(confint(regre_log))[-1, , drop=F]
+```
+
+## 1.4 Estimando OR usando regresión logística para un predictor numérico
+
+```{r}
+regre_log_1 <- glm(desenlace ~ edad, family = binomial, data = hipert_covid_1)
+
+summary(regre_log_1)$coef
+```
+
+```{r}
+exp(coef(regre_log_1)[-1])
+```
+
+```{r}
+theme_gtsummary_language(language = "es")
+```
+
+```{r}
+tabla_reg_logi <- hipert_covid_1 |>   tbl_uvregression(     include = c(edad, sexo, hipert),     y = desenlace,     method = glm,     method.args = list(family = binomial),     exponentiate = TRUE,     conf.int = TRUE,     hide_n = TRUE,     add_estimate_to_reference_rows = FALSE,     pvalue_fun = ~ style_pvalue(.x, digits = 3),     estimate_fun = ~ style_number(.x, digits = 2),     label = list(       edad ~ "Edad (años)",       sexo ~ "Sexo",       hipert ~ "Hipertensión"     )   ) |>   bold_labels() |>   bold_p(t = 0.05) |>   modify_header(estimate = "**OR no ajustado**", p.value = "**Valor P**")
+```
+
+IMPRIMIMOS LAS TABLAS
+
+```{r}
+tabla_reg_logi
+```
+
+## 2.3 Ajustamos modelos de regresión de Poisson
+
+```{r}
+reg_poisson1 = glm(episod_asma ~ sexo, data = asma, family = "poisson")
+summary(reg_poisson1)
+```
+
+```{r}
+reg_poisson2 = glm(episod_asma ~ infec_resp_recur, data = asma, family = "poisson")
+summary(reg_poisson2)
+```
+
+```{r}
+reg_poisson2 = glm(episod_asma ~ ghq12, data = asma, family = "poisson")
+summary(reg_poisson2)
+```
+
+## 2.4 Cómo interpretar y reportar los resultados de una regresión de Poisson
+
+```{r}
+tabla_reg_poisson <- asma |>
+  tbl_uvregression(
+    include = c(sexo, infec_resp_recur, ghq12),
+    y = episod_asma,
+    method = glm,
+    method.args = list(family = poisson),
+    exponentiate = TRUE,
+    conf.int = TRUE,
+    hide_n = TRUE,
+    add_estimate_to_reference_rows = FALSE,
+    pvalue_fun = ~ style_pvalue(.x, digits = 3),
+    estimate_fun = ~ style_number(.x, digits = 2),
+    label = list(
+      sexo ~ "Sexo",
+      infec_resp_recur ~ "Infección respiratoria recurrente",
+      ghq12 ~ "Bienestar psicológico"
+    )
+  ) |>
+  bold_labels() |>
+  bold_p(t = 0.05) |>
+  modify_header(estimate = "**IRR no ajustado**", p.value = "**Valor P**")
+```
+
+```{r}
+tabla_reg_poisson
+```
+
+Basándonos en esta tabla, podemos interpretar los resultados de la siguiente manera:
+
+Ser del sexo femenino esta asociado a un menor riesgo de sufrir un ataque asmático, con un IRR de 0.74 (IC 95%: 0.58, 0.94).
+
+Aquellos con infección respiratoria recurrente tienen un mayor riesgo de sufrir un ataque asmático, con un IRR de 2.47 (IC 95%: 1.84, 3.26).
+
+Un aumento de un punto en la puntuación GHQ-12 (que evalua el bienestar psicológico) incrementa el riesgo de tener un ataque asmático en 1.06 (IC 95%: 1.05, 1.06).
+
+------------------------------------------------------------------------
+
+PC4-2
+
+## Instalar y cargar los paquetes
+
+```{r}
+install.packages("mice") 
+install.packages("modify_header")
+```
+
+```{r}
+install.packages("bold_labels")
+```
+
+```{r}
+install.packages("ggmice")
+```
+
+```{r}
+library(mice) 
+library(tidyverse) 
+library(here) 
+library(rio) 
+library(ggmice) 
+```
+
+## 1 Datos perdidos en investigación en salud
+
+Es común encontrar datos faltantes en un conjunto de datos. Por ejemplo, al recolectar información a partir de historias clínicas de pacientes en un hospital, algunas variables pueden no estar disponibles porque no fueron medidas, anotadas o solicitadas por el personal de salud. En otro escenario, en estudios que utilizan encuestas, es posible que las personas encuestadas no respondan ciertas preguntas o que las respuestas sean ininteligibles.
+
+Cuando se aplican métodos de regresión en investigaciones en ciencias de la salud, la práctica habitual consiste en eliminar las observaciones que contienen datos faltantes. Esta técnica se conoce como análisis de casos completos, y muchos paquetes estadísticos la implementan por defecto.
+
+## 2 Imputación de datos
+
+Siempre es preferible utilizar todas las observaciones en un análisis de regresión, ya que esto permite obtener estimaciones más precisas y cercanas a la realidad. En esta sesión, aplicaremos una técnica llamada imputación, que consiste en reemplazar los datos perdidos con una estimación de su valor verdadero.
+
+Esta no es una técnica reciente. Enfoques anteriores de imputación —como, por ejemplo, reemplazar los valores perdidos con el promedio de la variable— han sido ampliamente utilizados, pero presentan limitaciones. Estas limitaciones han sido superadas por una técnica más moderna y actualmente muy popular: la imputación múltiple de datos.
+
+## 3 El dataset para este ejercicio
+
+Para ilustrar el proceso de imputación múltiple de datos, utilizaremos el conjunto de datos `s14_glucosa_circum.csv`. Este dataset incluye información de 194 pacientes adultos. Las variables registradas comprenden el estado del síndrome metabólico (sí o no), la edad (en años), el sexo (femenino o masculino), la circunferencia de cintura (en centímetros), el índice de masa corporal, el ácido úrico y el nivel de glucosa (mg/dL), entre otras. Algunos participantes presentan valores faltantes en al menos una de estas variables.
+
+Cargando los datos
+
+```{r}
+data_sm <- import(here("data", "s14_glucosa_circun.csv"))
+```
+
+Un vistazo a los datos
+
+```{r}
+head(data_sm)
+```
+
+## 4 Realizando la imputación de datos
+
+### 4.1 ¿Donde estan los valores perdidos?
+
+Es importante saber en qué variables se encuentran los datos antes de iniciar la inputación. Una forma rápida es usando la función `colSums()` es `is.na()`.
+
+```{r}
+colSums(is.na(data_sm))
+```
+
+Incluso mejor, podemos visualizar los datos perdidos en un mapa de calor usando la función `plot_pattern()` de **ggmice**.
+
+```{r}
+data_sm |>
+  select(
+      edad,
+      sexo,
+      circun_cintura,
+      imc,
+      acido_urico,
+      glucosa,
+      hdl,
+      trigliceridos,
+      sindrom_metabolico
+    ) |>
+  ggmice::plot_pattern(
+    square = TRUE,
+    rotate = TRUE
+  )
+```
+
+El número total de valores perdidos en el dataset data_sm es de 43. Las variables `sindrom_metabolico`, `imc` y `glucosa` tienen 8, 13 y 22 valores perdidos, respectivamente. Hay 6 pacientes quienes tienen valores perdidos en dos variables.
+
+### 4.2 Comparación de participantes con y sin valores perdidos
+
+Una buena práctica antes de iniciar la imputación de datos es también evaluar cómo difieren los valores de las otras variables entre el grupo de participantes con valores perdidos y el grupo sin valores perdidos. Esto es importante debido a que puede darnos pistas de si en realidad es necesaria la imputación o, dicho de otra forma, si es seguro usar el análisis de casos completos. ¿Cómo? si la distribución de las otras variables no difiere entre el grupo con valores perdidos y el grupo sin valores perdidos, entonces no es necesario la imputación de datos. Evaluemos esto en nuestro dataset para la variable `glucosa` e `imc`
+
+```{r}
+tabla_glucosa = data_sm |> 
+  dplyr::select(
+      edad,
+      sexo,
+      circun_cintura,
+      imc,
+      acido_urico,
+      glucosa,
+      hdl,
+      trigliceridos,
+      sindrom_metabolico
+    ) |>
+  mutate(missing = factor(
+    is.na(glucosa),
+    levels = c(FALSE, TRUE),
+    labels = c("Sin valores perdidos", "Con valores perdidos")
+  )) |> 
+  tbl_summary(
+    by = missing,
+    statistic = list(
+      all_continuous()  ~ "{mean} ({sd})",
+      all_categorical() ~ "{n}    ({p}%)")
+    ) |> 
+  modify_header(label = "**Variable**",
+                all_stat_cols() ~ "**{level}**<br>N = {n} ({style_percent(p, digits=1)}%)") |> 
+  modify_caption("Características de los participantes segun valor perdido") |> 
+  bold_labels()
+
+tabla_imc = data_sm |> 
+  dplyr::select(
+      edad,
+      sexo,
+      circun_cintura,
+      imc,
+      acido_urico,
+      glucosa,
+      hdl,
+      trigliceridos,
+      sindrom_metabolico
+    ) |>
+  mutate(missing = factor(
+    is.na(imc),
+    levels = c(FALSE, TRUE),
+    labels = c("Sin valores perdidos", "Con valores perdidos")
+  )) |> 
+  tbl_summary(
+    by = missing,
+    statistic = list(
+      all_continuous()  ~ "{mean} ({sd})",
+      all_categorical() ~ "{n}    ({p}%)")
+    ) |> 
+  modify_header(label = "**Variable**",
+                all_stat_cols() ~ "**{level}**<br>N = {n} ({style_percent(p, digits=1)}%)") |> 
+  modify_caption("Características de los participantes segun valor perdido") |> 
+  bold_labels()
+
+tabla <- tbl_merge(
+  tbls = list(tabla_glucosa, tabla_imc),
+  tab_spanner = c("**Glucosa**", "**IMC**")
+)
+```
+
+```{r}
+tabla
+```
+
+Nota que el promedio y desviación estandard, para algunas variables, varían en la comparación del grupo con variables perdidas y completas.
+
+### 4.3 ¿Qué variables debo incluir en el proceso de imputación?
+
+Debemos incluir todas las variables que se utilizarán en los análisis posteriores, incluso aquellas que no presentan valores perdidos. La razón es que el modelo de imputación debe ser *tan complejo como el análisis que se realizará posteriormente*. De lo contrario, se perderá información relevante de las demás variables. Además, aunque algunas variables no tengan valores faltantes, su inclusión en el modelo de imputación es útil porque aportan información que mejora la estimación de los valores imputados. Recuerda además que las variables categóricas deben ser de tipo factor. El código de abajo selecciona las variables y transforma la variable `sindrom_metabolico` a factor.
+
+```{r}
+input_data =
+  data_sm |>
+    dplyr::select(
+      edad,
+      sexo,
+      circun_cintura,
+      imc,
+      acido_urico,
+      glucosa,
+      hdl,
+      trigliceridos,
+      sindrom_metabolico
+    ) |> 
+  mutate(sindrom_metabolico = as.factor(sindrom_metabolico))
+```
+
+### 4.4 La función `mice()` para imputar datos
+
+Para imputar datos utilizaremos la función `mice()` del paquete del mismo nombre. Entre sus argumentos, debemos especificar:
+
+-   el número de imputaciones con `m`,
+-   una semilla (`seed`) para que los resultados sean reproducibles, y
+-   el método de imputación con `method`.
+
+Con respecto a este último argumento, emplearemos el método `"pmm"` para variables continuas y `"logreg"` para variables binarias. Para las variables que **no presentan valores perdidos**, simplemente se colocan comillas vacías (`""`).
+
+Cabe recalcar que el conjunto de datos contiene 9 variables, de las cuales 3 presentan valores perdidos, y las variables se encuentran en el siguiente orden.
+
+```{r}
+names(input_data)
+```
+
+El método de imputación la indicaremos con el argumento `method` en el mismo orden que aparecen las variables en el dataset.
+
+```{r}
+data_imputada =
+  mice(
+    input_data,
+    m = 20,
+    method = c(
+      "",
+      "",
+      "",
+      "pmm",
+      "",
+      "pmm",
+      "",
+      "",
+      "logreg"),
+    maxit = 20,
+    seed = 3,
+    print = F
+    )
+```
+
+```{r}
+data_imputada
+```
+
+El resultado de la imputación se ha guardado en el objeto data_imputada y muestra que es un objeto de clase mids (multiply imputed dataset), el número de imputaciones (20), el método de imputación para todas las variables, y en una matriz, cuales variables han sido usadas para predecir otras.
+
+## 5 Analizando los datos imputados
+
+Antes de realizar análisis adicionales al dataset imputado, es necesario explorar los datos imputados. Idealmente, los valores imputados deben ser plausibles en comparación con los valores observados. Podemos observar esto en un gráfico de cajas y bigotes de la distribución de los datos imputados (20) versus los datos sin imputar.
+
+Para la variable Glucosa
+
+```{r}
+ggmice(data_imputada, aes(x = .imp, y = glucosa)) +
+  geom_jitter(height = 0, width = 0.25) +
+  geom_boxplot(width = 0.5, size = 1, alpha = 0.55, outlier.shape = NA) +
+  labs(x = "Imputation number")
+```
+
+Para la variables IMC
+
+```{r}
+ggmice(data_imputada, aes(x = .imp, y = imc)) +
+  geom_jitter(height = 0, width = 0.25) +
+  geom_boxplot(width = 0.5, size = 1, alpha = 0.55, outlier.shape = NA) +
+  labs(x = "Imputation number")
+```
+
+Con esta función, los datos observados se encuentran al inicio (azul), y los demás boxplots corresponden a los datos imputados (20). Para ambos casos, los datos imputados estan dentro del rango de los valores observados, son plausibles.
+
+Para datos categóricos, podemos crear una tabla de dos entradas comparando la distribución de la variable con datos completos e incompletos. Esto requiere primero crear la versión "long" de la data imputada.
+
+```{r}
+data_imputada_l <- complete(data_imputada, "long", include = TRUE)
+```
+
+Ahora la tabla.
+
+```{r}
+data_imputada_l <- data_imputada_l %>% 
+  mutate(imputed = .imp > 0,
+         imputed = factor(imputed,
+                          levels = c(F,T),
+                          labels = c("Observado", "Imputado")))
+
+prop.table(table(data_imputada_l$sindrom_metabolico,
+                 data_imputada_l$imputed),
+           margin = 2)
+```
+
+Idealmente los dos primero número luego del decimal, debe ser similares entre datos observados e imputados.
+
+### 5.1 Procedimientos adicionales luego de la imputación
+
+El procedimiento estándar para realizar un análisis de regresión después de la imputación consiste en utilizar la función `with()` para ajustar el modelo de regresión al objeto `mids` (por ejemplo, `data_imputada`). Posteriormente, se emplea la función `pool()` para obtener los resultados combinados, como se suele presentar en la sección de resultados.
+
+No obstante, si se hace uso del paquete **gtsummary**, este y sus funciones manejan internamente el agrupamiento de las imputaciones, por lo que solo es necesario utilizar la función `with()`. A continuación, se muestra un ejemplo de regresión logística multivariada con los datos imputados, tal como lo realizaste anteriormente.
+
+Recuerda que es posible realizar cualquier tipo de análisis de regresión o (con procedimientos adicionales) pruebas inferenciales a partir de los datos imputados.
+
+```{r}
+
+tabla_multi <-
+  data_imputada |> 
+  with(glm(sindrom_metabolico ~ edad + sexo + circun_cintura + 
+             imc + acido_urico + glucosa + hdl + trigliceridos,
+           family = binomial(link = "logit"))) |> 
+  tbl_regression(exponentiate = TRUE,
+                 label = list(
+                   sexo ~ "Sexo",
+                   circun_cintura ~ "Circunferencia de cintura (cm)",
+                   imc ~ "Índice de Masa Corporal",
+                   acido_urico ~ "Ácido Úrico",
+                   glucosa ~ "Glucosa (mg/dL)",
+                   hdl ~ "HDL (mg/dL)",
+                   trigliceridos ~ "Triglicéridos (mg/dL)")) |>
+  bold_p(t = 0.05) |>
+  modify_header(estimate = "**OR ajustado**", p.value = "**p valor** ")
+```
+
+```{r}
+tabla_multi
+```

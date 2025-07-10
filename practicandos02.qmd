@@ -1,0 +1,63 @@
+---
+title: "tarea_s02"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+```{r}
+x = 2
+y = 16
+z = 32
+```
+
+```{r}
+x + y
+y + z
+```
+
+```{r}
+e = c(16, 52, 85)
+```
+
+```{r}
+a = "Hipertenso"
+b = "diabetes"
+c = "glaucoma"
+```
+
+```{r}
+is.vector(a)
+```
+
+```{r}
+is.vector(x)
+```
+
+```{r}
+class(b)
+```
+
+```{r}
+class(z)
+```

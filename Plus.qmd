@@ -1,0 +1,16 @@
+---
+title: "Trabajo Final"
+format: html
+execute:
+  echo: true
+---
+# Presentación completa
+
+{{< include "Trabajo_Grupo_5(cuenta LRPD).qmd" >}}
+
+{{< include "Trabajo_Grupo_5_pc2-2(LRPD-D).qmd" >}}
+
+{{< include "Trabajo_Grupo_5_pc4-1 (RODRIGO ).qmd" >}}
+
+{{< include "trabjo_grupo_5_pc4_2(RODRIGO).qmd" >}}
+---

@@ -1,0 +1,104 @@
+---
+title: "s03_recuperacion"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+Clase de funciones
+
+```{r}
+mean(glucosa)
+```
+
+```{r}
+sd(glucosa)
+```
+
+```{r}
+median(glucosa)
+```
+
+Argumentos de las funciones:
+
+```{r}
+?rnorm
+```
+
+```{r}
+set.seed(100)
+rnorm(n = 10, mean = 50, sd = 15)
+```
+
+```{r}
+set.seed(100)
+rnorm(10, 50, 15)
+```
+
+```{r}
+install.packages("here")
+```
+
+```{r}
+install.packages("tidyverse")
+```
+
+```{r}
+install.packages("survival")
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+library(survival)
+```
+
+```{r}
+library(here)
+```
+
+```{r}
+install.packages("rio")
+```
+
+```{r}
+library(rio)
+```
+
+```{r}
+data_artritis = import(here("data", "s02_treat_artritis.csv"))
+```
+
+```{r}
+data_artritis_1 = import(here("data", "s02_treat_artritis.xlsx"))
+```
+
+```{r}
+data_artritis_3 = import(here("data", "s02_treat_artritis.Rdata"))
+```
+
+```{r}
+data_artritis_2 = import(here("data", "s02_treat_artritis.sav"))
+```
